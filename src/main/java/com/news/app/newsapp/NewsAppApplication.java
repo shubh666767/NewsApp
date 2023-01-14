@@ -7,19 +7,21 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class })
 @EnableCaching
+@EnableScheduling
 public class NewsAppApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(NewsAppApplication.class, args);
 	}
 	
-    @Bean
-    public CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager("addresses");
-    }
 
+	  @Bean
+	    public CacheManager cacheManager() {
+	        return new ConcurrentMapCacheManager("newsDetailList");
+	    }
 
 }

@@ -9,7 +9,10 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -26,7 +29,7 @@ public class NewsAppService {
 	
 	private String rootUrl= "https://hacker-news.firebaseio.com/v0/";
 	
-	
+	@Cacheable(value="newsDetailList")
 	public List<NewsDetails> getTopStories() {
 		String topStoriesUrl = rootUrl + "topstories.json?print=pretty";
 		RestTemplate restTemplate = new RestTemplate();
@@ -38,6 +41,7 @@ public class NewsAppService {
 		
 	}
 	
+	
 	private List<NewsDetails> getItemsWithItemIds(Integer[] itemIds) {
 		RestTemplate restTemplate = new RestTemplate();
 		
@@ -45,12 +49,16 @@ public class NewsAppService {
 		int i=0;
 		System.out.println("starting");
 		for(Integer itemId:itemIds ) {
+			if(i<20) {
 			String itemUrl = rootUrl + "/item/"+itemId + ".json?print=pretty";
 			NewsDetails newsDetail =restTemplate.getForObject(itemUrl, NewsDetails.class);
 			newsDetailList.add(newsDetail);
 			System.out.println("number " +i );
 			System.out.println(newsDetail);
 			i++;
+			}else {
+				break;
+			}
 		}
 //		for(int i=0;i<itemIds.length;i++) {
 //		String itemUrl = rootUrl + "/item/"+itemIds[i] + ".json?print=pretty";
@@ -69,6 +77,7 @@ public class NewsAppService {
 		newsDetailList = newsDetailList.stream()
 		.filter(item-> (System.currentTimeMillis() / 1000L)- item.getTime()<15*60*1000)
 		.sorted(comp)
+		.limit(10)
 		.collect(Collectors.toList());
 		
 		System.out.println(newsDetailList);
@@ -76,7 +85,11 @@ public class NewsAppService {
 		return newsDetailList;
 	}		
 		
-		
+	@CacheEvict(value = {"newsDetailList"}, allEntries = true)
+	@Scheduled(fixedRate = 2*60*1000)
+	public void emptyHotelsCache() {
+	    logger.info("emptying News cache");
+	}
 		
 		
 		
