@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.news.app.newsapp.news.model.NewsDetailModel;
 import com.news.app.newsapp.news.model.NewsDetails;
+import com.news.app.newsapp.news.model.PrimaryKeyAndComment;
 import com.news.app.newsapp.news.model.ResponseModel;
 import com.news.app.newsapp.news.service.NewsAppService;
 
@@ -37,7 +38,7 @@ public class NewsController {
 	}
 	
 	@GetMapping(value="/comments")
-	private List<ResponseModel> pastComments() {
+	private List<PrimaryKeyAndComment> pastComments() {
 		
 		return newsAppService.getComments();
 		
