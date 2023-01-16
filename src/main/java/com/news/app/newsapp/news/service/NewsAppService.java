@@ -64,31 +64,30 @@ public class NewsAppService {
 			NewsDetailModel ndm = new NewsDetailModel();
 
 			e.printStackTrace();
-			return null;
+			throw new FailureException(e.getMessage());
 		}
 
 
 	}
 
 
-	private List<NewsDetailModel> getItemsWithItemIds(Integer[] itemIds) {
+	public List<NewsDetailModel> getItemsWithItemIds(Integer[] itemIds) {
 		RestTemplate restTemplate = new RestTemplate();
-
+		try {
 		List<NewsDetailModel> newsDetailList = new ArrayList<>();
-		int i=0;
+		
 		logger.info("starting individual calls with item ids");
 		for(Integer itemId:itemIds ) {
-			if(i<20) {
+			
 				String itemUrl = rootUrl + "/item/"+itemId + ".json?print=pretty";
 				NewsDetailModel newsDetail =restTemplate.getForObject(itemUrl, NewsDetailModel.class);
 				newsDetailList.add(newsDetail);
-				System.out.println("number " +i );
-				System.out.println(newsDetail);
-				i++;
-			}else {
-				break;
+				//System.out.println("number " +i );
+				logger.info(newsDetail.toString());
+				//System.out.println(newsDetail);
+				
 			}
-		}
+		
 
 
 
@@ -111,19 +110,25 @@ public class NewsAppService {
 
 		saveTopNews(newsDetailList);
 
-		List<Kids> kidList =new ArrayList<>();
+		//List<Kids> kidList =new ArrayList<>();
 
 		return newsDetailList;
+		}catch(ServiceException e) {
+			e.printStackTrace();
+			throw new FailureException(e.getMessage());
+
+		}
 	}		
 
 	@CacheEvict(value = {"newsDetailList"}, allEntries = true)
-	@Scheduled(fixedRate = 2*60*1000)
+	@Scheduled(fixedRate = 15*60*1000)
 	public void emptyHotelsCache() {
 		logger.info("emptying News cache");
 	}
 
 
 	private void saveTopNews(List<NewsDetailModel> newsDetailList) {
+		try {
 		List<NewsDetails> newsDetails = new ArrayList<>();
 		for(int i=0;i<newsDetailList.size();i++) {
 			NewsDetails news = new NewsDetails();
@@ -141,6 +146,11 @@ public class NewsAppService {
 
 			logger.info("saved top news, about to save kids" );
 			saveKids(newsDetailList.get(i),updatedNews);
+
+		}
+		}catch(ServiceException e) {
+			e.printStackTrace();
+			throw new FailureException(e.getMessage());
 
 		}
 	}
@@ -171,25 +181,33 @@ public class NewsAppService {
 		logger.info("kids saved......" );
 		}catch(ServiceException e ) {
 			e.printStackTrace();
+			throw new FailureException(e.getMessage());
+
 		}
 	}
 
 
 	public List<ResponseModel> getPastStories() {
 		// TODO Auto-generated method stub
-		return newsAppDao.getPastStories();
+		try {
+     		return newsAppDao.getPastStories();
+		}catch(ServiceException e) {
+			throw new FailureException(e.getMessage());
+
+		}
 	}
 
 
 	public List<PrimaryKeyAndComment> getComments() {
 		// TODO Auto-generated method stub
+		try {
 		List<Integer> listOfPrimaryIds = newsAppDao.getPrimaryIdOfLastTenStories();
 
 		for(Integer primaryInt: listOfPrimaryIds) {
 			System.out.println(primaryInt);
 			List<Kids> storiesModel=	newsAppDao.getComments(primaryInt);
-			System.out.println("kskkkkkkkkkkkkkkkkkkkkkkkkkkk");
-			System.out.println(storiesModel.get(0).getKid());
+			logger.info("=======================================================================");
+			logger.info("The list of primary Ints "+ primaryInt);
 			callCommentApi(storiesModel, primaryInt);
 		}
 		//listOfPrimaryIds.stream().forEach(e->System.out.println(newsAppDao.getComments(e).get(0).getPrimaryId()));
@@ -215,8 +233,14 @@ public class NewsAppService {
 			pkac.add(pk);
 		}
 		return pkac;
-	}
+		
+		
+	}catch(ServiceException e) {
+		e.printStackTrace();
+		throw new FailureException(e.getMessage());
 
+	}
+	}
 
 	public void callCommentApi(List<Kids> storiesModel, int primaryInt) {
 		try {
@@ -226,6 +250,7 @@ public class NewsAppService {
 			storiesModel.stream().forEach(e-> {
 				String itemUrl = rootUrl + "/item/"+e.getKid() + ".json?print=pretty";
 				//String itemUrl = rootUrl + "/item/"+itemId + ".json?print=pretty";
+				logger.info("comment url =>=>=>=>"+ itemUrl);
 				NewsDetailModel newsDetail =restTemplate.getForObject(itemUrl, NewsDetailModel.class);
 				newsDetailList.add(newsDetail);
 				System.out.println(newsDetail);
@@ -246,12 +271,9 @@ public class NewsAppService {
 
 		}catch(ServiceException e) {
 			e.printStackTrace();
+			throw new FailureException(e.getMessage());
+
 		}
-
-
-
-
-
 	}}
 
 

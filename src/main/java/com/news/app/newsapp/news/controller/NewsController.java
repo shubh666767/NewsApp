@@ -7,10 +7,13 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.news.app.newsapp.news.exception.ServiceException;
 import com.news.app.newsapp.news.model.NewsDetailModel;
 import com.news.app.newsapp.news.model.NewsDetails;
 import com.news.app.newsapp.news.model.PrimaryKeyAndComment;
 import com.news.app.newsapp.news.model.ResponseModel;
+import com.news.app.newsapp.news.service.ControllerException;
+import com.news.app.newsapp.news.service.FailureException;
 import com.news.app.newsapp.news.service.NewsAppService;
 
 @RestController
@@ -22,25 +25,31 @@ public class NewsController {
 
 	@GetMapping(value="/top-stories")
 	private List<NewsDetailModel> shopping() {
-		
-		long unixTime = System.currentTimeMillis() / 1000L;
-		System.out.println("hdhdhdh"+ unixTime);
+		try {
 		return newsAppService.getTopStories();
-		
+		}catch(FailureException e) {
+			throw new ControllerException("There was some issue while execution of top stories");
+		}
 	}
 	
 	
 	@GetMapping(value="/past-stories")
-	private List<ResponseModel> pastStories() {
-		
+	private List<ResponseModel> pastStories() {	
+		try {
 		return newsAppService.getPastStories();
+		}catch(FailureException e) {
+			throw new ControllerException("There was some issue while execution of past stories");
+		}
 		
 	}
 	
 	@GetMapping(value="/comments")
-	private List<PrimaryKeyAndComment> pastComments() {
-		
+	private List<PrimaryKeyAndComment> getComments() {	
+		try {
 		return newsAppService.getComments();
+		}catch(FailureException e) {
+			throw new ControllerException("There was some issue while execution of getComments");
+		}
 		
 	}
 
